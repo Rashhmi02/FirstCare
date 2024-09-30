@@ -1,0 +1,13 @@
+Admin ---- 
+admin
+123
+
+
+branch
+
+
+
+open medi
+to run split terminal 
+c/clientside  npm start
+c/serverside  nodemon

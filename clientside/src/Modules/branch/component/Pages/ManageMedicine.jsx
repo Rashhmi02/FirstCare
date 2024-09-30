@@ -1,0 +1,247 @@
+import React, { useState, useEffect } from 'react';
+import { styled } from '@mui/material/styles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import { Box, Button, TextField } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import PreviewIcon from '@mui/icons-material/Preview';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import Modal from '@mui/material/Modal';
+import IconButton from '@mui/material/IconButton';
+import BorderColorIcon from '@mui/icons-material/BorderColor';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import Swal from 'sweetalert2'
+import Axios from 'axios';
+import config from '../../../../config';
+import moment from 'moment';
+import { Edit } from '@mui/icons-material';
+
+const style = {
+    position: 'absolute',
+    top: '50%',
+    borderRadius: '10px',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 700,
+    bgcolor: 'background.paper',
+    maxHeight: '500px',
+    overflowY: 'auto',
+    //   border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+};
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+        backgroundColor: theme.palette.common.black,
+        color: theme.palette.common.white,
+    },
+    [`&.${tableCellClasses.body}`]: {
+        fontSize: 14,
+    },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    '&:nth-of-type(odd)': {
+        // backgroundColor: theme.palette.action.hover,
+        backgroundColor: '#DEECFF',
+    },
+    // hide last border
+    '&:last-child td, &:last-child th': {
+        border: 0,
+    },
+}));
+
+
+export default function ManageMedicine() {
+    const host = config.host;
+    // const navigate = useNavigate();
+
+    const [data, setData] = useState({});
+    const [value, setValue] = useState([]);
+    const [deleted, setDeleted] = useState(false);
+
+
+    const handleChange = (e) => {
+        setData({ ...data, [e.target.name]: e.target.value });
+    };
+
+
+
+    const [medicine, setmedicine] = useState([]);
+    const [open, setOpen] = React.useState(false);
+    const [description, setDescription] = useState('');
+    const [roadmap, setRoadmap] = useState([]);
+    const [deleteCat, setDeletemedicine] = useState(false);
+
+    const handleClose = () => setOpen(false);
+
+
+
+    useEffect(() => {
+        const tokens = JSON.parse(localStorage.getItem('userToken'));
+
+        axios.get(`${host}/api/medi/getMedicine`, { headers: { 'auth-token': tokens } })
+            .then((res) => {
+                console.log(res.data, 777878)
+                setmedicine(res.data);
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+    }, [deleteCat])
+
+
+    const handleOpen = (index) => {
+        setOpen(true)
+        setDescription(medicine[index].description);
+        setRoadmap(medicine[index].roadmap)
+    }
+
+
+
+
+    const handleDelete = async (id) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You want to delete this medicine',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(`${host}/api/medi/deleteMedicine/${id}`)
+                    .then((response) => {
+                        setDeletemedicine(!deleteCat)
+                        console.log("Insert Response : " + response.data.cname);
+                    })
+                    .catch((err) => {
+                        console.log("Error : " + err);
+                    })
+                Swal.fire('Deleted!', 'Medicine has been deleted.', 'success');
+            }
+        });
+    };
+
+
+    return (
+        <div style={{ height: '100vh' }}>
+
+
+            <Paper >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
+                    <Typography variant='h6' sx={{ color: 'gray', fontWeight: '500' }}>Manage Medicine</Typography>
+                    <Link to='/branch/add-medicine'>
+                        <Button variant='contained' color='success' sx={{ backgroundColor: 'gray' }} startIcon={<AddIcon />} size='small'>Add Medicine</Button>
+                    </Link>
+                </Box>
+                <TableContainer sx={{ p: 2 }}>
+                    <Table sx={{ minWidth: 700 }} aria-label="customized table">
+                        <TableHead>
+                            <TableRow>
+                                <StyledTableCell align="center">Medicine Name</StyledTableCell>
+                                <StyledTableCell align="center">Medicine Type</StyledTableCell>
+                                <StyledTableCell align="center">Rack Number </StyledTableCell>
+                                <StyledTableCell align="center">Box Number</StyledTableCell>
+                                <StyledTableCell align="center">Description</StyledTableCell>
+                                <StyledTableCell align="center">Action</StyledTableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {medicine?.map((row, index) => (
+                                <StyledTableRow key={row.name}>
+
+                                    <StyledTableCell align="center">{row.medicineName}</StyledTableCell>
+                                    <StyledTableCell align="center">{row.medicineType}</StyledTableCell>
+                                    <StyledTableCell align="center">
+                                        <Box sx={{ border: '1px solid', borderRadius: '10px' }}>
+                                            {row.rackNumber}
+                                        </Box>
+                                    </StyledTableCell>
+                                    <StyledTableCell align="center">
+                                        <Box sx={{ border: '1px solid', borderRadius: '10px' }}>
+                                            {row.boxNumber}
+                                        </Box>
+                                    </StyledTableCell>
+                                    <StyledTableCell align="center">
+                                        <TextField multiline row={2} disabled variant='outlined' value={row.description} />
+                                    </StyledTableCell>
+                                    <StyledTableCell align="center">
+                                        <Link to={`/branch/edit-medicine/${row._id}`}>
+                                            <IconButton>
+                                                <Edit />
+                                            </IconButton>
+                                        </Link>
+                                        <IconButton onClick={() => handleDelete(row._id)}>
+                                            <DeleteOutlineIcon />
+                                        </IconButton>
+
+                                    </StyledTableCell>
+                                    {/* <StyledTableCell align="center">{moment(row.manufactureDate).format("MMM Do YYYY")}</StyledTableCell> */}
+
+
+
+
+
+
+                                    {/* <StyledTableCell align="center"><IconButton onClick={() => handleOpen(index)}><PreviewIcon color='success' /></IconButton></StyledTableCell> */}
+                                    {/* <StyledTableCell align="center">
+                                        <Link to={`/branch/view-chapter/${row._id}`}>
+                                            <Button variant='outlined' size='small' color='success' startIcon={<AutoStoriesIcon />}>View Chapter</Button>
+                                        </Link>
+                                    </StyledTableCell>
+                                    <StyledTableCell align="center">
+                                        <Link to={`/branch/update-medicine/${row._id}`}><IconButton><BorderColorIcon /></IconButton></Link>
+                                        <IconButton onClick={() => handleDelete(row._id)}><DeleteOutlineIcon /></IconButton>
+                                        </StyledTableCell> */}
+
+                                </StyledTableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+
+
+                <Modal
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                >
+                    <Box sx={style}>
+                        <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ fontWeight: '600', color: 'grey' }}>
+                            Medicine Description
+                        </Typography>
+                        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                            {description}
+                        </Typography>
+
+                        <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ fontWeight: '600', color: 'grey', mt: 3 }}>
+                            Medicine Roadmap
+                        </Typography>
+                        <ul>
+                            {roadmap.map((i) => (
+                                <li>
+                                    <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                                        {i}
+                                    </Typography>
+                                </li>
+
+                            ))}
+                        </ul>
+                    </Box>
+                </Modal>
+            </Paper>
+        </div >
+    );
+}
